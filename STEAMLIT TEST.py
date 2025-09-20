@@ -4,7 +4,8 @@ from datetime import datetime
 import os, sys, subprocess
 
 # ---------- Config ----------
-DATA_DIR = r"C:\\Users\\Peterv\\Desktop\\AUTOSCRIPT LOKAAL\\DATA STEAMLIT TEST"
+# Opslagmap (Windows): gebruik raw string r"..."
+DATA_DIR = r"C:\Users\Peterv\LEEUWEN TRUCKS & VAN Dropbox\PRJ Vriezen\Test streamlit"
 CSV_PATH = os.path.join(DATA_DIR, "autos.csv")
 
 # Zorg dat de map bestaat
@@ -16,11 +17,12 @@ def init_csv():
         df = pd.DataFrame(columns=["Auto naam", "Auto nummer", "Toegevoegd op"])
         df.to_csv(CSV_PATH, index=False, encoding="utf-8")
 
-
 def add_car(name: str, number: str):
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_row = pd.DataFrame([[name.strip(), number.strip(), created_at]],
-                           columns=["Auto naam", "Auto nummer", "Toegevoegd op"])
+    new_row = pd.DataFrame(
+        [[name.strip(), number.strip(), created_at]],
+        columns=["Auto naam", "Auto nummer", "Toegevoegd op"]
+    )
     if os.path.exists(CSV_PATH):
         df = pd.read_csv(CSV_PATH)
         df = pd.concat([df, new_row], ignore_index=True)
@@ -28,17 +30,18 @@ def add_car(name: str, number: str):
         df = new_row
     df.to_csv(CSV_PATH, index=False, encoding="utf-8")
 
-
 def get_all_cars() -> pd.DataFrame:
     if os.path.exists(CSV_PATH):
         return pd.read_csv(CSV_PATH)
     return pd.DataFrame(columns=["Auto naam", "Auto nummer", "Toegevoegd op"])
 
-
 # ---------- Streamlit UI ----------
 st.set_page_config(page_title="Auto registratie", page_icon="🚗", layout="centered")
 st.title("🚗 Auto registratie")
-st.caption("Voer een *auto naam* en *auto nummer* in en sla ze op.")
+st.caption(
+    "Voer een *auto naam* en *auto nummer* in en sla ze op. "
+    f"Data wordt opgeslagen in: {DATA_DIR}"
+)
 
 # Init CSV
 init_csv()
@@ -58,7 +61,6 @@ with st.form("add_car_form", clear_on_submit=True):
             errors.append("Vul een geldige *auto naam* in.")
         if not number or not number.strip():
             errors.append("Vul een geldig *auto nummer* in.")
-        
         if errors:
             for e in errors:
                 st.error(e)
@@ -70,7 +72,6 @@ with st.form("add_car_form", clear_on_submit=True):
                 st.error(f"Er ging iets mis bij opslaan: {e}")
 
 st.subheader("📋 Overzicht")
-
 try:
     df = get_all_cars()
     if df.empty:
@@ -98,9 +99,7 @@ with st.expander("⚙️ Opties"):
         except Exception as e:
             st.error(f"Verwijderen mislukt: {e}")
 
-
-# ---- VS Code Play: auto-start Streamlit ----
-if __name__ == "__main__":
-    # Start Streamlit automatisch wanneer je op Play drukt in VS Code
-    # (Voorkomt extra terminal-commando's.)
+# ---- VS Code Play: auto-start Streamlit (optioneel en veilig) ----
+# Zet in VS Code bij Run-config een env var LOCAL_PLAY=1 om via 'Play' automatisch te starten.
+if __name__ == "__main__" and os.environ.get("LOCAL_PLAY") == "1":
     subprocess.run([sys.executable, "-m", "streamlit", "run", __file__, "--server.port=8501"])
